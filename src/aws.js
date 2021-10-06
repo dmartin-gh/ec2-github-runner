@@ -11,8 +11,9 @@ function buildUserDataScript(githubRegistrationToken, label) {
       "#!/bin/bash",
       `cd "${config.input.runnerHomeDir}"`,
       "export RUNNER_ALLOW_RUNASROOT=1",
+      `export RUNNER_NAME=\`hostname\`-${label}`,
       "export DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1",
-      `./config.sh --url https://github.com/${config.githubContext.owner}/${config.githubContext.repo} --token ${githubRegistrationToken} --labels ${label}`,
+      `./config.sh --unattended --url https://github.com/${config.githubContext.owner}/${config.githubContext.repo} --token ${githubRegistrationToken} --name "$RUNNER_NAME" --labels ${label}`,
       "./run.sh",
     ];
   } else {
@@ -23,8 +24,9 @@ function buildUserDataScript(githubRegistrationToken, label) {
       "curl -O -L https://github.com/actions/runner/releases/download/v2.283.1/actions-runner-linux-${RUNNER_ARCH}-2.283.1.tar.gz",
       "tar xzf ./actions-runner-linux-${RUNNER_ARCH}-2.283.1.tar.gz",
       "export RUNNER_ALLOW_RUNASROOT=1",
+      `export RUNNER_NAME=\`hostname\`-${label}`,
       "export DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1",
-      `./config.sh --url https://github.com/${config.githubContext.owner}/${config.githubContext.repo} --token ${githubRegistrationToken} --labels ${label}`,
+      `./config.sh --unattended --url https://github.com/${config.githubContext.owner}/${config.githubContext.repo} --token ${githubRegistrationToken} --name "$RUNNER_NAME" --labels ${label}`,
       "./run.sh",
     ];
   }
