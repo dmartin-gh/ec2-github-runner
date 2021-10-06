@@ -83,7 +83,7 @@ async function terminateEc2Instances() {
   const ec2 = new AWS.EC2();
 
   const params = {
-    InstanceIds: config.input.ecsInstanceIds.split(','),
+    InstanceIds: config.input.ec2InstanceIds.split(','),
   };
 
   try {
