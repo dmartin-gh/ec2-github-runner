@@ -40,7 +40,7 @@ class Config {
       };
     } else if (this.mode == 'stop') {
       this.aws = {
-        ec2InstanceIDs: core.getInput('ec2-instance-ids', required).split(','),
+        ec2InstanceIDs: core.getInput('aws-ec2-instance-ids', required).split(','),
       };
 
       this.github.runner = {
