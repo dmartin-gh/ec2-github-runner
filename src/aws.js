@@ -27,18 +27,22 @@ catch() {
 export DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
 export RUNNER_ALLOW_RUNASROOT=1
 export RUNNER_HOME="${v.home}"
+export RUNNER_USER="${v.user}"
+export RUNNER_GROUP="$(id -gn ${v.user})"
 
-if [[ -n "$RUNNER_HOME" ]]; then
-    cd $RUNNER_HOME
-else
-    mkdir actions-runner && cd actions-runner
+mkdir -p $RUNNER_HOME && cd $RUNNER_HOME
+
+if [[ ! -f config.sh ]]; then
     case $(uname -m) in aarch64) ARCH="arm64" ;; amd64|x86_64) ARCH="x64" ;; esac && export RUNNER_ARCH=\${ARCH}
     curl -O -L https://github.com/actions/runner/releases/download/v2.283.1/actions-runner-linux-\${RUNNER_ARCH}-2.283.1.tar.gz
     tar xzf ./actions-runner-linux-\${RUNNER_ARCH}-2.283.1.tar.gz
 fi
 
+chown -R $RUNNER_USER:$RUNNER_GROUP $RUNNER_HOME
+
 ./config.sh --unattended --url https://github.com/${v.owner}/${v.repo} --token ${v.token} --name ${v.name} --labels ${v.label}
-./run.sh
+./svc.sh install $RUNNER_USER
+./svc.sh start
 `;
 
 async function waitForInstancesRunning(ec2InstanceIds) {
@@ -59,7 +63,8 @@ async function startEc2Instances(label, githubRegistrationToken) {
 
   const userData = UserData({
     name: `ec2-runner-${config.generateUniqueLabel()}`,
-    home: config.input.runnerHomeDir || '',
+    home: config.input.runnerHomeDir,
+    user: config.input.runnerUser,
     owner: config.githubContext.owner,
     repo: config.githubContext.repo,
     token: githubRegistrationToken,

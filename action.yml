@@ -68,8 +68,16 @@ inputs:
     default: '[]'
   runner-home-dir:
     description: >-
-      Directory that contains actions-runner software and scripts. E.g. /home/runner/actions-runner.
+      Directory to install the actions runner in. Any existing installation at that location will be
+      automatically used. Otherwise, a fresh installation is created.
     required: false
+    default: '$HOME/actions-runner'
+  runner-user:
+    description: >-
+      User to run the actions-runner service as. The actions installation will be owned by this user and
+      all executed workflows will run as this user.
+    required: false
+    default: 'root'
 outputs:
   label:
     description: >-
