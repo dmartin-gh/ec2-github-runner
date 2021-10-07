@@ -26,6 +26,7 @@ catch() {
 
 export DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
 export RUNNER_ALLOW_RUNASROOT=1
+export RUNNER_NAME="$(cat /var/lib/cloud/data/instance-id)"
 export RUNNER_HOME="${v.home}"
 export RUNNER_USER="${v.user}"
 export RUNNER_GROUP="$(id -gn ${v.user})"
@@ -40,7 +41,7 @@ fi
 
 chown -R $RUNNER_USER:$RUNNER_GROUP $RUNNER_HOME
 
-./config.sh --unattended --url https://github.com/${v.owner}/${v.repo} --token ${v.token} --name ${v.name} --labels ${v.label}
+./config.sh --unattended --url https://github.com/${v.owner}/${v.repo} --token ${v.token} --name $RUNNER_NAME --labels ${v.label}
 ./svc.sh install $RUNNER_USER
 ./svc.sh start
 `;
