@@ -7,9 +7,10 @@ function setOutput(ec2InstanceIDs) {
   core.setOutput('github-runner-label', config.github.runner.label);
 }
 
-// User data scripts are run as the root user
-// If runner home directory is specified, we expect the actions-runner software (and dependencies)
-// to be pre-installed in the AMI, so we simply cd into that directory and then start the runner
+// User data to install the GitHub runner and start it as a systemd service using
+// the provided svc.sh script from the runner package. If an existing runner
+// installation is found (via the existence of the config.sh file), that installation
+// is used instead of installing a new one (github-runner-version is ignored).
 const UserData = (v) => `\
 #!/bin/bash -xe
 
