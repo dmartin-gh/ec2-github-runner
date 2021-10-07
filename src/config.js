@@ -3,63 +3,69 @@ const github = require('@actions/github');
 
 class Config {
   constructor() {
-    this.input = {
-      mode: core.getInput('mode'),
-      githubToken: core.getInput('github-token'),
-      ec2ImageId: core.getInput('ec2-image-id'),
-      ec2InstanceType: core.getInput('ec2-instance-type'),
-      subnetId: core.getInput('subnet-id'),
-      securityGroupId: core.getInput('security-group-id'),
-      count: parseInt(core.getInput('count')),
-      label: core.getInput('label'),
-      ec2InstanceIds: core.getInput('ec2-instance-ids'),
-      iamRoleName: core.getInput('iam-role-name'),
-      runnerHomeDir: core.getInput('runner-home-dir'),
-      runnerUser: core.getInput('runner-user'),
-    };
+    const required = { required: true };
 
-    // the values of github.context.repo.owner and github.context.repo.repo are taken from
+    // The values of github.context.repo.owner and github.context.repo.repo are taken from
     // the environment variable GITHUB_REPOSITORY specified in "owner/repo" format and
-    // provided by the GitHub Action on the runtime
-    this.githubContext = {
-      owner: github.context.repo.owner,
-      repo: github.context.repo.repo,
+    // provided by the GitHub Action at runtime
+    this.github = {
+      context: {
+        owner: github.context.repo.owner,
+        repo: github.context.repo.repo,
+      },
+      token: core.getInput('github-token', required),
     };
 
-    //
-    // validate input
-    //
+    this.mode = core.getInput('mode', required);
 
-    if (!this.input.mode) {
-      throw new Error(`The 'mode' input is not specified`);
-    }
+    // Gather inputs
+    if (this.mode == 'start') {
+      this.aws = {
+        ec2ImageID: core.getInput('aws-ec2-image-id', required),
+        ec2InstanceCount: parseInt(core.getInput('aws-ec2-instance-count', required)),
+        ec2InstanceName: core.getInput('aws-ec2-instance-name', required),
+        ec2InstanceType: core.getInput('aws-ec2-instance-type', required),
+        iamRoleName: core.getInput('aws-iam-role-name'),
+        resourceTags: JSON.parse(core.getInput('aws-resource-tags', required)),
+        vpcSecurityGroupID: core.getInput('aws-vpc-security-group-id', required),
+        vpcSubnetID: core.getInput('aws-vpc-subnet-id', required),
+      };
 
-    if (!this.input.githubToken) {
-      throw new Error(`The 'github-token' input is not specified`);
-    }
+      this.github.runner = {
+        installDir: core.getInput('github-runner-install-dir', required),
+        label: this.generateUniqueLabel(),
+        timeout: parseInt(core.getInput('github-runner-timeout', required)),
+        user: core.getInput('github-runner-user', required),
+        version: core.getInput('github-runner-version', required),
+      };
+    } else if (this.mode == 'stop') {
+      this.aws = {
+        ec2InstanceIDs: core.getInput('ec2-instance-ids', required).split(','),
+      };
 
-    if (this.input.count < 1) {
-      throw new Error(`Invalid value for 'count': ${this.input.count}`);
-    }
-
-    if (this.input.mode === 'start') {
-      if (!this.input.ec2ImageId || !this.input.ec2InstanceType || !this.input.subnetId || !this.input.securityGroupId) {
-        throw new Error(`Not all the required inputs are provided for the 'start' mode`);
-      }
-    } else if (this.input.mode === 'stop') {
-      if (!this.input.label || !this.input.ec2InstanceIds) {
-        throw new Error(`Not all the required inputs are provided for the 'stop' mode`);
-      }
+      this.github.runner = {
+        label: core.getInput('github-runner-label', required),
+      };
     } else {
-      throw new Error('Wrong mode. Allowed values: start, stop.');
+      throw new Error(`Unrecognized mode "${this.mode}", allowed values: {start, stop}`);
     }
 
-    if (this.input.mode === 'start') {
-      this.label = this.generateUniqueLabel();
+    // Process start inputs
+    if (this.mode === 'start') {
+      if (this.aws.ec2InstanceCount < 1) {
+        throw new Error(`Invalid value for 'aws-ec2-instance-count': ${this.aws.ec2InstanceCount}`);
+      }
 
-      const tags = JSON.parse(core.getInput('aws-resource-tags'));
-      tags.push({ Key: 'GitHubRunnerLabel', Value: this.label });
-      this.tagSpecifications = [
+      const tags = this.aws.resourceTags.concat([
+        { Key: 'Name', Value: this.aws.ec2InstanceName },
+        { Key: 'GitHubRepository', Value: `${this.github.context.owner}/${this.github.context.repo}` },
+        { Key: 'GitHubRunID', Value: String(github.context.runId) },
+        { Key: 'GitHubRunNumber', Value: String(github.context.runNumber) },
+        { Key: 'GitHubWorkflow', Value: github.context.workflow },
+        { Key: 'GitHubRunnerLabel', Value: this.github.runner.label },
+      ]);
+
+      this.aws.tagSpecifications = [
         { ResourceType: 'instance', Tags: tags },
         { ResourceType: 'volume', Tags: tags },
       ];

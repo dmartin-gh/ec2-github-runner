@@ -4,8 +4,7 @@ const config = require('./config');
 const core = require('@actions/core');
 
 async function start() {
-  const githubRegistrationToken = await gh.getRegistrationToken();
-  await aws.startEc2Instances(githubRegistrationToken);
+  await aws.startEc2Instances(await gh.getRegistrationToken());
   await gh.waitForRunnersRegistered();
 }
 
@@ -16,7 +15,7 @@ async function stop() {
 
 (async function () {
   try {
-    config.input.mode === 'start' ? await start() : await stop();
+    config.mode === 'start' ? await start() : await stop();
   } catch (error) {
     core.error(error);
     core.setFailed(error.message);

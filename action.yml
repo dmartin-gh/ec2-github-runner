@@ -1,94 +1,115 @@
-name: On-demand self-hosted AWS EC2 runner for GitHub Actions
-description: GitHub Action for automatic creation and registration AWS EC2 instance as a GitHub Actions self-hosted runner.
-author: Volodymyr Machula
+name: On-demand self-hosted AWS EC2 runners for GitHub Actions
+description: GitHub Action for automatic creation and registration AWS EC2 instances as a GitHub Actions self-hosted runners.
+author: David Martin
 branding:
   icon: 'box'
   color: 'orange'
 inputs:
   mode:
     description: >-
-      Specify here which mode you want to use:
-        - 'start' - to start a new runner;
-        - 'stop' - to stop the previously created runner.
+      The mode in which the action is operating:
+        - 'start' - start a new set of runners
+        - 'stop' - stop a previously created set of runners
     required: true
   github-token:
     description: >-
       GitHub Personal Access Token with the 'repo' scope assigned.
     required: true
-  ec2-image-id:
+
+  # mode=start
+  aws-ec2-image-id:
     description: >-
-      EC2 Image Id (AMI). The new runner will be launched from this image.
+      EC2 Image ID (AMI). The new runners will be launched from this image.
       This input is required if you use the 'start' mode.
     required: false
-  ec2-instance-type:
+  aws-ec2-instance-count:
+    description: >-
+      Number of EC2 instances to create
+    required: false
+    default: '1'
+  aws-ec2-instance-name:
+    description: >-
+      EC2 instance name to assign to the 'Name' tag on each instance.
+    required: false
+    default: ec2-github-runner
+  aws-ec2-instance-type:
     description: >-
       EC2 Instance Type.
       This input is required if you use the 'start' mode.
     required: false
-  subnet-id:
+  aws-iam-role-name:
     description: >-
-      VPC Subnet Id. The subnet should belong to the same VPC as the specified security group.
-      This input is required if you use the 'start' mode.
-    required: false
-  security-group-id:
-    description: >-
-      EC2 Security Group Id.
-      The security group should belong to the same VPC as the specified subnet.
-      The runner doesn't require any inbound traffic. However, outbound traffic should be allowed.
-      This input is required if you use the 'start' mode.
-    required: false
-  count:
-    description: >-
-      EC2 instance count, defaults to 1
-    required: false
-    default: '1'
-  label:
-    description: >-
-      Name of the unique label assigned to the runner.
-      The label is used to remove the runner from GitHub when the runner is not needed anymore.
-      This input is required if you use the 'stop' mode.
-    required: false
-  ec2-instance-ids:
-    description: >-
-      EC2 Instance Ids of the created runners (comma-separated)
-      The ids are used to terminate the EC2 instances when the runners are not needed anymore.
-      This input is required if you use the 'stop' mode.
-    required: false
-  iam-role-name:
-    description: >-
-      IAM Role Name to attach to the created EC2 instance.
+      IAM Role Name to attach to the created EC2 instances.
       This requires additional permissions on the AWS role used to launch instances.
     required: false
   aws-resource-tags:
     description: >-
-      Tags to attach to the launched EC2 instance and volume.
+      Tags to attach to the launched EC2 instances and volumes in addition to the default ones.
       This must be a stringified array of AWS Tag objects, with both Key and Value fields,
       for example: '[{"Key": "TagKey1", "Value": "TagValue1"}, {"Key": "TagKey2", "Value": "TagValue2"}]'
     required: false
     default: '[]'
-  runner-home-dir:
+  aws-vpc-security-group-id:
+    description: >-
+      EC2 Security Group ID.
+      The security group should belong to the same VPC as the specified subnet.
+      The runners do not require any inbound traffic. However, outbound traffic should be allowed.
+      This input is required if you use the 'start' mode.
+    required: false
+  aws-vpc-subnet-id:
+    description: >-
+      VPC Subnet ID. The subnet should belong to the same VPC as the specified security group.
+      This input is required if you use the 'start' mode.
+    required: false
+  github-runner-install-dir:
     description: >-
       Directory to install the actions runner in. Any existing installation at that location will be
       automatically used. Otherwise, a fresh installation is created.
     required: false
-    default: '$HOME/actions-runner'
-  runner-user:
+    default: '/opt/actions-runner'
+  github-runner-timeout:
+    description: >-
+      Minutes to wait for runners to register themselves
+    required: false
+    default: '5'
+  github-runner-user:
     description: >-
       User to run the actions-runner service as. The actions installation will be owned by this user and
       all executed workflows will run as this user.
     required: false
     default: 'root'
-outputs:
-  label:
+  github-runner-version:
     description: >-
-      Name of the unique label assigned to the runner.
+      Version of the GitHub runner to install.
+    required: false
+    default: '2.283.1'
+
+  # mode=stop
+  aws-ec2-instance-ids:
+    description: >-
+      EC2 Instance IDs of the created runners (comma-separated)
+      The ids are used to terminate the EC2 instances when the runners are not needed anymore.
+      This input is required if you use the 'stop' mode.
+    required: false
+  github-runner-label:
+    description: >-
+      Name of the unique label assigned to each runner.
+      The label is used to remove the runners from GitHub when they are not needed anymore.
+      This input is required if you use the 'stop' mode.
+    required: false
+
+outputs:
+  aws-ec2-instance-ids:
+    description: >-
+      EC2 Instance IDs of the created runners (comma-separated)
+      The ids are used to terminate the EC2 instances when the runners are not needed anymore.
+  github-runner-label:
+    description: >-
+      Name of the unique label assigned to each runner.
       The label is used in two cases:
       - to use as the input of 'runs-on' property for the following jobs;
-      - to remove the runner from GitHub when it is not needed anymore.
-  ec2-instance-ids:
-    description: >-
-      EC2 Instance Ids of the created runners (comma-separated)
-      The ids are used to terminate the EC2 instances when the runners are not needed anymore.
+      - to remove the runners from GitHub when they are not needed anymore.
+
 runs:
   using: node12
   main: ./dist/index.js

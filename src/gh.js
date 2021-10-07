@@ -6,10 +6,10 @@ const config = require('./config');
 // use the unique label to find the runner
 // as we don't have the runner's id, it's not possible to get it in any other way
 async function getRunners(label) {
-  const octokit = github.getOctokit(config.input.githubToken);
+  const octokit = github.getOctokit(config.github.token);
 
   try {
-    const runners = await octokit.paginate('GET /repos/{owner}/{repo}/actions/runners', config.githubContext);
+    const runners = await octokit.paginate('GET /repos/{owner}/{repo}/actions/runners', config.github.context);
     const foundRunners = _.filter(runners, { labels: [{ name: label }] });
     return foundRunners.length > 0 ? foundRunners : null;
   } catch (error) {
@@ -19,10 +19,10 @@ async function getRunners(label) {
 
 // get GitHub Registration Token for registering a self-hosted runner
 async function getRegistrationToken() {
-  const octokit = github.getOctokit(config.input.githubToken);
+  const octokit = github.getOctokit(config.github.token);
 
   try {
-    const response = await octokit.request('POST /repos/{owner}/{repo}/actions/runners/registration-token', config.githubContext);
+    const response = await octokit.request('POST /repos/{owner}/{repo}/actions/runners/registration-token', config.github.context);
     core.info('GitHub Registration Token is received');
     return response.data.token;
   } catch (error) {
@@ -32,19 +32,21 @@ async function getRegistrationToken() {
 }
 
 async function removeRunners() {
-  const runners = await getRunners(config.input.label);
-  const octokit = github.getOctokit(config.input.githubToken);
+  const label = config.github.runner.label;
+  const runners = await getRunners(label);
+  const octokit = github.getOctokit(config.github.token);
 
   // skip the runner removal process if no runners are found
   if (!runners) {
-    core.info(`GitHub self-hosted runners with label ${config.input.label} not found, so the removal is skipped`);
+    core.info(`GitHub self-hosted runners with label ${label} not found, so the removal is skipped`);
     return;
   }
 
   let firstError = null;
   for (const runner of runners) {
+    const params = _.merge(config.github.context, { runner_id: runner.id });
     try {
-      await octokit.request('DELETE /repos/{owner}/{repo}/actions/runners/{runner_id}', _.merge(config.githubContext, { runner_id: runner.id }));
+      await octokit.request('DELETE /repos/{owner}/{repo}/actions/runners/{runner_id}', params);
       core.info(`GitHub self-hosted runner removed: ${runner.name}`);
     } catch (error) {
       core.error(`GitHub self-hosted runner removal error: ${error}`);
@@ -59,7 +61,7 @@ async function removeRunners() {
 }
 
 async function waitForRunnersRegistered() {
-  const timeoutMinutes = 5;
+  const timeoutMinutes = config.github.runner.timeout;
   const retryIntervalSeconds = 10;
   const quietPeriodSeconds = 30;
   let waitSeconds = 0;
@@ -70,7 +72,7 @@ async function waitForRunnersRegistered() {
 
   return new Promise((resolve, reject) => {
     const interval = setInterval(async () => {
-      const runners = await getRunners(config.label);
+      const runners = await getRunners(config.github.runner.label);
 
       if (waitSeconds > timeoutMinutes * 60) {
         core.error('GitHub self-hosted runner registration error');
