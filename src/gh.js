@@ -58,7 +58,7 @@ async function removeRunners() {
   }
 }
 
-async function waitForRunnersRegistered(label) {
+async function waitForRunnersRegistered() {
   const timeoutMinutes = 5;
   const retryIntervalSeconds = 10;
   const quietPeriodSeconds = 30;
@@ -70,7 +70,7 @@ async function waitForRunnersRegistered(label) {
 
   return new Promise((resolve, reject) => {
     const interval = setInterval(async () => {
-      const runners = await getRunners(label);
+      const runners = await getRunners(config.label);
 
       if (waitSeconds > timeoutMinutes * 60) {
         core.error('GitHub self-hosted runner registration error');

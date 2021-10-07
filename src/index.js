@@ -4,10 +4,9 @@ const config = require('./config');
 const core = require('@actions/core');
 
 async function start() {
-  const label = config.generateUniqueLabel();
   const githubRegistrationToken = await gh.getRegistrationToken();
-  await aws.startEc2Instances(label, githubRegistrationToken);
-  await gh.waitForRunnersRegistered(label);
+  await aws.startEc2Instances(githubRegistrationToken);
+  await gh.waitForRunnersRegistered();
 }
 
 async function stop() {

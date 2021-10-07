@@ -2,8 +2,8 @@ const AWS = require('aws-sdk');
 const core = require('@actions/core');
 const config = require('./config');
 
-function setOutput(label, ec2InstanceIds) {
-  core.setOutput('label', label);
+function setOutput(ec2InstanceIds) {
+  core.setOutput('label', config.label);
   core.setOutput('ec2-instance-ids', ec2InstanceIds.join(','));
 }
 
@@ -58,7 +58,7 @@ async function waitForInstancesRunning(ec2InstanceIds) {
   }
 }
 
-async function startEc2Instances(label, githubRegistrationToken) {
+async function startEc2Instances(githubRegistrationToken) {
   const ec2 = new AWS.EC2();
 
   const userData = UserData({
@@ -68,7 +68,7 @@ async function startEc2Instances(label, githubRegistrationToken) {
     owner: config.githubContext.owner,
     repo: config.githubContext.repo,
     token: githubRegistrationToken,
-    label: label,
+    label: config.label,
   });
 
   const params = {
@@ -87,7 +87,7 @@ async function startEc2Instances(label, githubRegistrationToken) {
     const result = await ec2.runInstances(params).promise();
     const ec2InstanceIds = result.Instances.map((i) => i.InstanceId);
     core.info(`AWS EC2 instances started: ${ec2InstanceIds}`);
-    setOutput(label, ec2InstanceIds);
+    setOutput(ec2InstanceIds);
     await waitForInstancesRunning(ec2InstanceIds);
   } catch (error) {
     core.error('AWS EC2 instances starting error');

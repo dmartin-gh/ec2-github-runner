@@ -18,15 +18,6 @@ class Config {
       runnerUser: core.getInput('runner-user'),
     };
 
-    const tags = JSON.parse(core.getInput('aws-resource-tags'));
-    this.tagSpecifications = null;
-    if (tags.length > 0) {
-      this.tagSpecifications = [
-        { ResourceType: 'instance', Tags: tags },
-        { ResourceType: 'volume', Tags: tags },
-      ];
-    }
-
     // the values of github.context.repo.owner and github.context.repo.repo are taken from
     // the environment variable GITHUB_REPOSITORY specified in "owner/repo" format and
     // provided by the GitHub Action on the runtime
@@ -61,6 +52,17 @@ class Config {
       }
     } else {
       throw new Error('Wrong mode. Allowed values: start, stop.');
+    }
+
+    if (this.input.mode === 'start') {
+      this.label = this.generateUniqueLabel();
+
+      const tags = JSON.parse(core.getInput('aws-resource-tags'));
+      tags.push({ Key: 'GitHubRunnerLabel', Value: this.label });
+      this.tagSpecifications = [
+        { ResourceType: 'instance', Tags: tags },
+        { ResourceType: 'volume', Tags: tags },
+      ];
     }
   }
 

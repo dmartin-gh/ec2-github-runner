@@ -66,7 +66,7 @@ Use the following steps to prepare your workflow for running on your EC2 self-ho
 
 **1. Prepare IAM user with AWS access keys**
 
-1. Create new AWS access keys for the new or an existing IAM user with the following least-privilege minimum required permissions:
+1. Create AWS access keys for a new or existing IAM user. The user must with the following minimum required permissions:
 
    ```
    {
@@ -81,7 +81,19 @@ Use the following steps to prepare your workflow for running on your EC2 self-ho
            "ec2:DescribeInstanceStatus"
          ],
          "Resource": "*"
-       }
+       },
+       {
+        "Effect": "Allow",
+        "Action": [
+          "ec2:CreateTags"
+        ],
+        "Resource": "*",
+        "Condition": {
+          "StringEquals": {
+            "ec2:CreateAction": "RunInstances"
+          }
+        }
+      }
      ]
    }
    ```
@@ -104,28 +116,6 @@ Use the following steps to prepare your workflow for running on your EC2 self-ho
         "Effect": "Allow",
         "Action": "iam:PassRole",
         "Resource": "*"
-      }
-    ]
-   }
-   ```
-
-   If you use the `aws-resource-tags` parameter, you will also need to allow the permissions to create tags:
-
-   ```
-   {
-    "Version": "2012-10-17",
-    "Statement": [
-      {
-        "Effect": "Allow",
-        "Action": [
-          "ec2:CreateTags"
-        ],
-        "Resource": "*",
-        "Condition": {
-          "StringEquals": {
-            "ec2:CreateAction": "RunInstances"
-          }
-        }
       }
     ]
    }
@@ -193,7 +183,7 @@ Now you're ready to go!
 | `ec2-instance-ids`                                                                                                                                                           | Required if you use the `stop` mode.       | EC2 Instance Ids of the created runners. <br><br> The ids are provided by the output of the action in the `start` mode. <br><br> The ids are used to terminate the EC2 instances when the runners are not needed anymore.                                                                                                             |
 | `count`                                                                                                                                                                      | Optional. Used only with the `start` mode. | Number of EC2 instances to create. All instances will register their GitHub runners under the same label. <br><br> Default: 1 EC2 instance                                                                                                                                                                                            |
 | `iam-role-name`                                                                                                                                                              | Optional. Used only with the `start` mode. | IAM role name to attach to the created EC2 runner. <br><br> This allows the runner to have permissions to run additional actions within the AWS account, without having to manage additional GitHub secrets and AWS users. <br><br> Setting this requires additional AWS permissions for the role launching the instance (see above). |
-| `aws-resource-tags`                                                                                                                                                          | Optional. Used only with the `start` mode. | Specifies tags to add to the EC2 instance and any attached storage. <br><br> This field is a stringified JSON array of tag objects, each containing a `Key` and `Value` field (see example below). <br><br> Setting this requires additional AWS permissions for the role launching the instance (see above).                         |
+| `aws-resource-tags`                                                                                                                                                          | Optional. Used only with the `start` mode. | Specifies tags to add to the EC2 instance and any attached storage. <br><br> This field is a stringified JSON array of tag objects, each containing a `Key` and `Value` field (see example below). <br><br> A `GitHubRunnerLabel` tag will always be added with the label used to register the runner on the instance.                |
 | `runner-home-dir`                                                                                                                                                            | Optional. Used only with the `start` mode. | Directory to install the actions runner in. Any existing installation at that location will be automatically used. Otherwise, a fresh installation is created.                                                                                                                                                                        |
 | `runner-user`                                                                                                                                                                | Optional. Used only with the `start` mode. | User to run the actions-runner service as. The actions installation will be owned by this user and all executed workflows will run as this user.                                                                                                                                                                                      |
 
