@@ -3,8 +3,8 @@ const core = require('@actions/core');
 const config = require('./config');
 
 function setOutput(ec2InstanceIDs) {
-  core.setOutput('runner-label', config.github.runner.label);
-  core.setOutput('ec2-instance-ids', ec2InstanceIDs.join(','));
+  core.setOutput('aws-ec2-instance-ids', ec2InstanceIDs.join(','));
+  core.setOutput('github-runner-label', config.github.runner.label);
 }
 
 // User data scripts are run as the root user
