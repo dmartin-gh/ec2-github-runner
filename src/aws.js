@@ -27,7 +27,7 @@ catch() {
 export DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
 export RUNNER_ALLOW_RUNASROOT=1
 export RUNNER_HOME="${v.home}"
-export RUNNER_NAME="\`hostname\`-\`cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 10 | head -n 1\`"
+export RUNNER_NAME="$(hostname)-$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 10 | head -n 1)"
 
 if [[ -n "$RUNNER_HOME" ]]; then
     cd $RUNNER_HOME
