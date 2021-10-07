@@ -27,7 +27,6 @@ catch() {
 export DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
 export RUNNER_ALLOW_RUNASROOT=1
 export RUNNER_HOME="${v.home}"
-export RUNNER_NAME="$(hostname)-$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 10 | head -n 1)"
 
 if [[ -n "$RUNNER_HOME" ]]; then
     cd $RUNNER_HOME
@@ -38,7 +37,7 @@ else
     tar xzf ./actions-runner-linux-\${RUNNER_ARCH}-2.283.1.tar.gz
 fi
 
-./config.sh --unattended --url https://github.com/${v.owner}/${v.repo} --token ${v.token} --name "$RUNNER_NAME" --labels ${v.label}
+./config.sh --unattended --url https://github.com/${v.owner}/${v.repo} --token ${v.token} --name ${v.name} --labels ${v.label}
 ./run.sh
 `;
 
@@ -59,6 +58,7 @@ async function startEc2Instances(label, githubRegistrationToken) {
   const ec2 = new AWS.EC2();
 
   const userData = UserData({
+    name: `ec2-runner-${config.generateUniqueLabel()}`,
     home: config.input.runnerHomeDir || '',
     owner: config.githubContext.owner,
     repo: config.githubContext.repo,
