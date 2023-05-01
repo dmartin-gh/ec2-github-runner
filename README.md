@@ -144,7 +144,7 @@ Now you're ready to go!
 | `github-runner-install-dir` | `start` |          | Directory to install the runner in (default: `/opt/actions-runner`)                                                                             |
 | `github-runner-timeout`     | `start` |          | Minutes to wait for runners to register themselves (default: 5)                                                                                 |
 | `github-runner-user`        | `start` |          | User to run workflows as (default: `root`)                                                                                                      |
-| `github-runner-version`     | `start` |          | Version of the GitHub runner to install (default: `2.283.1`)                                                                                    |
+| `github-runner-version`     | `start` |          | Version of the GitHub runner to install (default: `2.303.0`)                                                                                    |
 | `aws-ec2-instance-ids`      | `stop`  | yes      | EC2 Instance IDs of runners created in a prior `start` step.                                                                                    |
 | `github-runner-label`       | `stop`  | yes      | Unique label assigned to the runners in the `start` step.                                                                                       |
 
