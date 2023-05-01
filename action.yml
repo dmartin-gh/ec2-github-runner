@@ -82,7 +82,7 @@ inputs:
     description: >-
       Version of the GitHub runner to install.
     required: false
-    default: '2.283.1'
+    default: '2.303.0'
 
   # mode=stop
   aws-ec2-instance-ids:
